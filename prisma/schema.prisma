@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Modèle pour l'event sourcing
+model EventStore {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  aggregateId String
+  eventType String
+  eventData Json
+  version   Int
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@map("event_store")
+}
+
+// Modèle pour les rendez-vous (projection)
+model Appointment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  patientId   String
+  doctorId    String
+  status      String   @default("SCHEDULED") // SCHEDULED, CONFIRMED, CANCELLED, COMPLETED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("appointments")
+}
+
+// Modèle pour les projections de lecture
+model AppointmentReadModel {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  appointmentId String  @unique
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  patientId   String
+  doctorId    String
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("appointment_read_models")
+}
